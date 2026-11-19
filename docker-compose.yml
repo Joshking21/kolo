@@ -1,0 +1,26 @@
+# Local infrastructure for Kolo.
+# Phase 0: Postgres only. Redis is added in Phase 7, MongoDB in Phase 8,
+# and the api/worker/web containers in Phase 10 (see ROADMAP.md).
+name: kolo
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kolo
+      POSTGRES_PASSWORD: kolo
+      POSTGRES_DB: kolo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once, the first time the volume is created: makes the kolo_test database.
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kolo -d kolo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
